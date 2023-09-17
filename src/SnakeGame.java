@@ -15,23 +15,43 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private char direction = 'R';
     private boolean running = false;
     private Timer timer;
+    private boolean inTitleScreen = true; // Title screen flag
+    private JButton beginButton; // Begin button
+    private int score = 0;
 
     public SnakeGame() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.black);
         setFocusable(true);
         addKeyListener(this);
-        startGame();
+
+        // Create and configure the Begin button
+        beginButton = new JButton("Begin");
+        beginButton.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        beginButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (inTitleScreen) {
+                    // Start the game when the Begin button is clicked from the title screen
+                    inTitleScreen = false;
+                    startGame();
+                    beginButton.setVisible(false); // Hide the button during gameplay
+                }
+            }
+        });
+
+        // Add the Begin button to the panel
+        add(beginButton);
+        timer = new Timer(DELAY, this);
+        timer.start();
     }
 
     public void startGame() {
         snake.clear();
-        snake.add(new Point(0, 0));
+        snake.add(new Point(2 * UNIT_SIZE, 2 * UNIT_SIZE)); // Starting position of the snake
         spawnFood();
-
+        score = 0;
+        direction = 'R';
         running = true;
-        timer = new Timer(DELAY, this);
-        timer.start();
     }
 
     public void spawnFood() {
@@ -64,6 +84,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         if (newHead.equals(food)) {
             spawnFood();
+            score += 10;
         } else {
             snake.remove(snake.size() - 1);
         }
@@ -91,21 +112,47 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (running) {
+        if (inTitleScreen) {
+            // Title screen
+            g.setColor(Color.white);
+            g.setFont(new Font("SansSerif", Font.BOLD, 40));
+            g.drawString("Snake Game", WIDTH / 2 - 120, HEIGHT / 2 - 40);
+
+            // Show the Begin button
+            beginButton.setBounds(WIDTH / 2 - 50, HEIGHT / 2 + 20, 100, 40);
+            beginButton.setVisible(true);
+            add(beginButton);
+        } else if (running) {
             // Draw food
             g.setColor(Color.red);
             g.fillRect(food.x, food.y, UNIT_SIZE, UNIT_SIZE);
 
             // Draw snake
-            for (Point p : snake) {
-                g.setColor(Color.green);
-                g.fillRect(p.x, p.y, UNIT_SIZE, UNIT_SIZE);
+            for (int i = 0; i < snake.size(); i++) {
+                if (i == 0) {
+                    // Snake head with eyes
+                    g.setColor(Color.green);
+                    g.fillRect(snake.get(i).x, snake.get(i).y, UNIT_SIZE, UNIT_SIZE);
+                    g.setColor(Color.black);
+                    g.fillRect(snake.get(i).x + 4, snake.get(i).y + 4, 6, 6); // Left eye
+                    g.fillRect(snake.get(i).x + 10, snake.get(i).y + 4, 6, 6); // Right eye
+                } else {
+                    g.setColor(Color.green);
+                    g.fillRect(snake.get(i).x, snake.get(i).y, UNIT_SIZE, UNIT_SIZE);
+                }
             }
+
+            // Draw score
+            g.setColor(Color.white);
+            g.setFont(new Font("SansSerif", Font.PLAIN, 20));
+            g.drawString("Score: " + score, 10, 20);
         } else {
             // Game over
             g.setColor(Color.red);
             g.setFont(new Font("SansSerif", Font.BOLD, 40));
-            g.drawString("Game Over", WIDTH / 2 - 110, HEIGHT / 2);
+            g.drawString("Game Over", WIDTH / 2 - 110, HEIGHT / 2 - 40);
+            g.setFont(new Font("SansSerif", Font.PLAIN, 20));
+            g.drawString("Final Score: " + score, WIDTH / 2 - 70, HEIGHT / 2 + 20);
         }
     }
 
@@ -125,18 +172,26 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
 
-        if ((keyCode == KeyEvent.VK_W || keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_I) && direction != 'D') {
-            direction = 'U';
-        } else if ((keyCode == KeyEvent.VK_S || keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_K) && direction != 'U') {
-            direction = 'D';
-        } else if ((keyCode == KeyEvent.VK_A || keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_J) && direction != 'R') {
-            direction = 'L';
-        } else if ((keyCode == KeyEvent.VK_D || keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_L) && direction != 'L') {
-            direction = 'R';
+        if (inTitleScreen) {
+            // Start the game when the Begin button is clicked from the title screen
+            if (keyCode == KeyEvent.VK_ENTER) {
+                inTitleScreen = false;
+                startGame();
+                beginButton.setVisible(false); // Hide the button during gameplay
+            }
+        } else if (running) {
+            // Control the snake during the game
+            if ((keyCode == KeyEvent.VK_W || keyCode == KeyEvent.VK_UP) && direction != 'D') {
+                direction = 'U';
+            } else if ((keyCode == KeyEvent.VK_S || keyCode == KeyEvent.VK_DOWN) && direction != 'U') {
+                direction = 'D';
+            } else if ((keyCode == KeyEvent.VK_A || keyCode == KeyEvent.VK_LEFT) && direction != 'R') {
+                direction = 'L';
+            } else if ((keyCode == KeyEvent.VK_D || keyCode == KeyEvent.VK_RIGHT) && direction != 'L') {
+                direction = 'R';
+            }
         }
     }
-
-    //fsdfs
 
     @Override
     public void keyReleased(KeyEvent e) {}
