@@ -5,22 +5,23 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class SnakeGame extends JPanel implements ActionListener, KeyListener {
-    private final int WIDTH = 400;
-    private final int HEIGHT = 400;
+    private int WIDTH = 600; // Updated screen width
+    private int HEIGHT = 600; // Updated screen height
     private final int UNIT_SIZE = 20;
     private final int GAME_UNITS = (WIDTH * HEIGHT) / (UNIT_SIZE * UNIT_SIZE);
-    private final int DELAY = 100;
+    private final int DELAY = 100; // Increased FPS
     private final ArrayList<Point> snake = new ArrayList<>();
+    private ArrayList<Point> obstacles = new ArrayList<>(); // List to store obstacles
     private Point food;
     private char direction = 'R';
     private boolean running = false;
     private Timer timer;
-    private boolean inTitleScreen = true; // Title screen flag
-    private JButton beginButton; // Begin button
+    private boolean inTitleScreen = true;
+    private JButton beginButton;
     private int score = 0;
 
     public SnakeGame() {
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setPreferredSize(new Dimension(WIDTH, HEIGHT)); // Set initial size
         setBackground(Color.black);
         setFocusable(true);
         addKeyListener(this);
@@ -31,10 +32,9 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         beginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (inTitleScreen) {
-                    // Start the game when the Begin button is clicked from the title screen
                     inTitleScreen = false;
                     startGame();
-                    beginButton.setVisible(false); // Hide the button during gameplay
+                    beginButton.setVisible(false);
                 }
             }
         });
@@ -47,11 +47,12 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     public void startGame() {
         snake.clear();
-        snake.add(new Point(2 * UNIT_SIZE, 2 * UNIT_SIZE)); // Starting position of the snake
+        snake.add(new Point(2 * UNIT_SIZE, 2 * UNIT_SIZE));
         spawnFood();
         score = 0;
         direction = 'R';
         running = true;
+        generateObstacles(); // Generate obstacles at the beginning of the game
     }
 
     public void spawnFood() {
@@ -59,6 +60,27 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         int x = rand.nextInt(WIDTH / UNIT_SIZE) * UNIT_SIZE;
         int y = rand.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
         food = new Point(x, y);
+    }
+
+    public void generateObstacles() {
+        Random rand = new Random();
+        obstacles.clear(); // Clear existing obstacles
+        int numObstacles = rand.nextInt(10) + 5; // Random number of obstacles (between 5 and 14)
+
+        for (int i = 0; i < numObstacles; i++) {
+            int x = rand.nextInt(WIDTH / UNIT_SIZE) * UNIT_SIZE;
+            int y = rand.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
+            Point obstacle = new Point(x, y);
+
+            // Ensure the obstacle doesn't overlap with the snake or food
+            while (snake.contains(obstacle) || obstacle.equals(food)) {
+                x = rand.nextInt(WIDTH / UNIT_SIZE) * UNIT_SIZE;
+                y = rand.nextInt(HEIGHT / UNIT_SIZE) * UNIT_SIZE;
+                obstacle = new Point(x, y);
+            }
+
+            obstacles.add(obstacle);
+        }
     }
 
     public void move() {
@@ -203,5 +225,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+        frame.setResizable(true); // Allow the window to be resized
     }
 }
